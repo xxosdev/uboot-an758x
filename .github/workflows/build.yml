@@ -27,6 +27,9 @@ jobs:
           - xg-040g-tf
           - xg-040g-mf
           - hm2004-du
+          # EN7523 (EN7529CT). 32-bit U-Boot; no preloader/FIP yet, see
+          # scripts/build-an758x.sh.
+          - hl202-du
 
     steps:
       - uses: actions/checkout@v4
@@ -56,8 +59,14 @@ jobs:
       - name: Upload ${{ matrix.target }}
         uses: actions/upload-artifact@v4
         with:
-          name: an758x-${{ matrix.target }}
-          path: output/${{ matrix.target }}/an75*
+          name: uboot-${{ matrix.target }}
+          # An758x boards produce the an7581-/an7583- preloader and FIP; the
+          # EN7523 board only has u-boot.bin/u-boot.lzma/u-boot.dtb so far.
+          path: |
+            output/${{ matrix.target }}/an75*
+            output/${{ matrix.target }}/en75*
+            output/${{ matrix.target }}/u-boot*
+            output/${{ matrix.target }}/README-*.txt
           if-no-files-found: error
 
   release:
@@ -70,7 +79,7 @@ jobs:
     steps:
       - uses: actions/download-artifact@v4
         with:
-          pattern: an758x-*
+          pattern: uboot-*
           path: release
           merge-multiple: true
 
