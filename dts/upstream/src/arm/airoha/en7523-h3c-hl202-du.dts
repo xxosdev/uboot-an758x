@@ -1,0 +1,55 @@
+// SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+/dts-v1/;
+
+/*
+ * H3C HL202-DU — Airoha/ECNT EN7529CT (en7523 family) XGS-PON ONT.
+ *
+ * 512 MiB DDR3 @ 0x80000000, 256 MiB SPI-NAND (Winbond W25N02K) on the SNFI
+ * controller, two PCIe root ports carrying a pair of MT7916 radios.
+ *
+ * NOTE: the SoC gpio0/gpio1 nodes are dropped again by en7523-u-boot.dtsi,
+ * which re-describes the pin controller for the U-Boot build. LEDs and keys
+ * therefore live in the board -u-boot.dtsi and reference &en7523_pinctrl, not
+ * the Linux gpio0 gpiochip.
+ */
+
+/* Bootloader installs ATF here */
+/memreserve/ 0x80000000 0x200000;
+
+#include "en7523.dtsi"
+
+/ {
+	model = "H3C HL202-DU";
+	compatible = "h3c,hl202-du", "airoha,en7523";
+
+	aliases {
+		serial0 = &uart1;
+	};
+
+	chosen {
+		bootargs = "console=ttyS0,115200 earlycon";
+		stdout-path = "serial0:115200n8";
+		linux,usable-memory-range = <0x80200000 0x1fe00000>;
+	};
+
+	memory@80000000 {
+		device_type = "memory";
+		reg = <0x80000000 0x20000000>;
+	};
+};
+
+&gpio0 {
+	status = "okay";
+};
+
+&gpio1 {
+	status = "okay";
+};
+
+&pcie0 {
+	status = "okay";
+};
+
+&pcie1 {
+	status = "okay";
+};

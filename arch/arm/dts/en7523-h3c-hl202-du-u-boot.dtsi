@@ -1,0 +1,118 @@
+// SPDX-License-Identifier: GPL-2.0+
+
+/*
+ * H3C HL202-DU board specifics for the U-Boot build.
+ *
+ * GPIO numbers come from the stock 7523duled.conf LED table dumped off the
+ * device (led_no -> gpio). Polarity is the table's "onoff" column: 0 means
+ * the LED lights when the line is driven low, i.e. GPIO_ACTIVE_LOW.
+ * The single exception is the optical TX-disable line (gpio16), which is
+ * active-high because driving it high mutes the transmitter.
+ */
+
+/ {
+	/* When running as a first-stage bootloader this isn't filled in automatically */
+	memory@80000000 {
+		device_type = "memory";
+		reg = <0x80000000 0x20000000>;
+	};
+
+	/* preboot turns the status LED on, so it has to exist before relocation. */
+	leds {
+		compatible = "gpio-leds";
+		bootph-all;
+
+		led-power {
+			label = "green:power";
+			gpios = <&en7523_pinctrl 11 GPIO_ACTIVE_LOW>;
+			default-state = "on";
+		};
+
+		led-pon {
+			label = "green:pon";
+			gpios = <&en7523_pinctrl 10 GPIO_ACTIVE_LOW>;
+		};
+
+		led-los {
+			label = "red:los";
+			gpios = <&en7523_pinctrl 3 GPIO_ACTIVE_LOW>;
+			default-state = "off";
+		};
+
+		led-internet {
+			label = "green:internet";
+			gpios = <&en7523_pinctrl 29 GPIO_ACTIVE_LOW>;
+		};
+
+		led-wlan {
+			label = "green:wlan";
+			gpios = <&en7523_pinctrl 6 GPIO_ACTIVE_LOW>;
+		};
+
+		led-wps {
+			label = "green:wps";
+			gpios = <&en7523_pinctrl 26 GPIO_ACTIVE_LOW>;
+		};
+
+		led-usb {
+			label = "green:usb";
+			gpios = <&en7523_pinctrl 4 GPIO_ACTIVE_LOW>;
+		};
+	};
+
+	buttons {
+		compatible = "gpio-keys";
+		bootph-all;
+
+		/* recovery-button.c looks this one up by label. */
+		button-reset {
+			label = "reset";
+			gpios = <&en7523_pinctrl 0 GPIO_ACTIVE_LOW>;
+		};
+
+		button-wps {
+			label = "wps";
+			gpios = <&en7523_pinctrl 7 GPIO_ACTIVE_LOW>;
+		};
+	};
+};
+
+#include "en7523-u-boot.dtsi"
+
+status_led: &{/leds/led-power} {
+};
+
+#include "an758x-status-led-u-boot.dtsi"
+
+&gdm1 {
+	/* Recovery networking requires gdm1 before relocation. */
+	status = "okay";
+	bootph-all;
+};
+
+&snfi {
+	status = "okay";
+};
+
+&spi_nand {
+	partitions {
+		compatible = "fixed-partitions";
+		#address-cells = <1>;
+		#size-cells = <1>;
+
+		/* BootROM loads BL2 out of the first 128 KiB eraseblock. */
+		bl2@0 {
+			label = "bl2";
+			reg = <0x0 0x20000>;
+		};
+
+		/*
+		 * Everything after BL2 is one UBI instance: fip, the redundant
+		 * environments, factory data and the FIT system image.
+		 */
+		ubi@20000 {
+			label = "ubi";
+			reg = <0x20000 0xffe0000>;
+		};
+	};
+};
