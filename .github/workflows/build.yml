@@ -37,9 +37,13 @@ jobs:
       - name: Install build tools
         run: |
           sudo apt-get update
+          # libgnutls28-dev is needed by the mkeficapsule host tool. No board
+          # in the matrix builds it today, but it is only one apt package and
+          # the failure it causes is a confusing one (host tool compile error
+          # in the middle of a cross build).
           sudo apt-get install -y --no-install-recommends \
             build-essential bc bison ca-certificates curl device-tree-compiler flex \
-            gcc-aarch64-linux-gnu gcc-arm-none-eabi libssl-dev \
+            gcc-aarch64-linux-gnu gcc-arm-none-eabi libgnutls28-dev libssl-dev \
             python3 python3-pyelftools swig
 
       - name: Download Mbed TLS
