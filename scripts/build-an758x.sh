@@ -40,6 +40,9 @@ output_root="$(CDPATH= cd -- "$output_root" && pwd)"
 : "${MBEDTLS_DIR:?MBEDTLS_DIR is required}"
 
 emmc=0
+# HG5582A: 本板 HWTRAP 被译成 SPI NOR，会让 BL23 走 spi_nor_init() 并挂死；
+# 该板实际是串口(SPI) NAND，这里强制按 NAND + SoC ECC 走。
+force_nand=0
 
 case "$board" in
 hg5382a)
@@ -53,6 +56,7 @@ hg5582a)
 	artifact_prefix=an7581-fiberhome-hg5582a
 	soc=EN7581
 	parallel_nand=0
+	force_nand=1
 	;;
 hg5585f-ct)
 	defconfig=an7581_fiberhome_hg5585f-ct_defconfig
@@ -180,6 +184,9 @@ if [ "$parallel_nand" -eq 1 ]; then
 fi
 if [ "$emmc" -eq 1 ]; then
 	common_atf_args="$common_atf_args TCSUPPORT_EMMC=1"
+fi
+if [ "$force_nand" -eq 1 ]; then
+	common_atf_args="$common_atf_args TCSUPPORT_HG5582A_FORCE_NAND=1"
 fi
 
 # shellcheck disable=SC2086

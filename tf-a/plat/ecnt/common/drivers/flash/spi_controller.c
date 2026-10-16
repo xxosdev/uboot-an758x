@@ -1072,6 +1072,16 @@ void ISSUE_AUTO_MODE_CMD(enum auto_modes mode)
 
 SPI_CONTROLLER_SPI_TYPE_T spi_type(void)
 {
+#if defined(TCSUPPORT_HG5582A_FORCE_NAND)
+	/*
+	 * HG5582A：本板 SFC_STRAP(0x1fa10114) 读出来是 0x00000000，
+	 * 按下面的 bit1 判法会得到 SPI_NOR，于是 IS_NANDFLASH 为 0、
+	 * isSpiNandAndCtrlECC 也为 0，BL2 会走 "Using Flash ECC"（on-die ECC）
+	 * 而不是原厂固件那条 "Using SoC ECC / ECC ability:8" 路径。
+	 * 板上确实是串口 NAND，这里直接返回 NAND。
+	 */
+	return SPI_CONTROLLER_SPI_NAND;
+#else
 	u32 val;
 
 	if(GET_NP_SCU_EMMC()) {
@@ -1084,6 +1094,7 @@ SPI_CONTROLLER_SPI_TYPE_T spi_type(void)
 			return SPI_CONTROLLER_SPI_NOR;
 		}
 	}
+#endif
 }
 
 #if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,30)

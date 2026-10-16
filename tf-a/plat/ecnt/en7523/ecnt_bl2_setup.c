@@ -94,6 +94,25 @@ void hw_trap_init(void)
 		hw_trap.is_spi_nand_ctrl_ecc = 1;
 		SET_IS_SPI_CONTROLLER_ECC(1);
 	}
+#if defined(TCSUPPORT_HG5582A_FORCE_NAND)
+	/*
+	 * HG5582A：本板 HWTRAP 被译成 SPI NOR（诊断版 61b4c88b 实测
+	 * hwtrap b1=0x20 => is_spi_nor=1，parallel/spi_dev_ecc/spi_ctrl_ecc 全 0），
+	 * 于是 flash_init() 走 else 分支的 spi_nor_init() 并挂死在 SPI 控制器
+	 * 访问上 —— 这就是 BL23 静默卡死的原因。
+	 *
+	 * 板上实际是串口(SPI) NAND；原厂固件打的是
+	 *   "Using SoC ECC." / "ECC ability:8" / "NFI spare area size:28"
+	 * 正是 HWTRAP_ROM_NAND_CONTROLLER_ECC_MODE(0xc) 那条路径的语义，
+	 * 所以这里按它强制，让 BL2 走 nandflash_init() + SoC ECC。
+	 */
+	printf("HG5582A: hwtrap_cfg=0x%x (decoded as SPI NOR) -> forcing SPI NAND + SoC ECC\n",
+	       (unsigned int)hwtrap_cfg);
+	hw_trap.is_spi_nor = 0;
+	hw_trap.is_spi_nand_device_ecc = 0;
+	hw_trap.is_spi_nand_ctrl_ecc = 1;
+	SET_IS_SPI_CONTROLLER_ECC(1);
+#endif
 #endif
 
 	hw_trap.hw_trap_decode	= (mmio_read_32(EN7523_HWTRAP_DEC) & HWTRAP_DEC_MASK);
