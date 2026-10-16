@@ -101,8 +101,28 @@ FLASH_INIT_T flash_init(hw_trap_t *hw_trap)
 	hwtrap = hw_trap;
 #if defined (TCSUPPORT_CPU_EN7581) || defined(TCSUPPORT_CPU_AN7583) || defined (TCSUPPORT_CPU_AN7552)
 #if defined(TCSUPPORT_PARALLEL_NAND)
+	/*
+	 * HG5582A 诊断：先把 HWTRAP 译码结果和 NFI 模式寄存器打出来，
+	 * 用来判断本机 NAND 到底被当成并口还是串口。
+	 * 相关位（plat_private.h hw_trap_t，byte1 = bit8..bit15）：
+	 *   b1.3=is_emmc  b1.4=is_parallel_nand  b1.5=is_spi_nor
+	 *   b1.6=is_spi_nand_device_ecc  b1.7=is_spi_nand_ctrl_ecc
+	 */
+	{
+		unsigned char b1 = ((unsigned char *)hw_trap)[1];
+		NOTICE("[HG5582A] hwtrap b1=0x%02x  emmc=%u parallel=%u spi_nor=%u spi_dev_ecc=%u spi_ctrl_ecc=%u decode=%u\n",
+		       (unsigned int)b1, (unsigned int)((b1 >> 3) & 1),
+		       (unsigned int)((b1 >> 4) & 1), (unsigned int)((b1 >> 5) & 1),
+		       (unsigned int)((b1 >> 6) & 1), (unsigned int)((b1 >> 7) & 1),
+		       (unsigned int)hw_trap->hw_trap_decode);
+		NOTICE("[HG5582A] NFI_MODE(0x1fa1155c)=0x%08x (bit2=SERIAL)  SFC_STRAP(0x%x)=0x%08x\n",
+		       mmio_read_32(0x1fa1155c), (unsigned int)EN7523_SFC_STRAP,
+		       mmio_read_32(EN7523_SFC_STRAP));
+	}
 	/* The reset-latched source remains authoritative across NFI reconfiguration. */
 	nandflash_set_parallel_mode(hwtrap->is_parallel_nand);
+	NOTICE("[HG5582A] set_parallel_mode(%u) done, entering nandflash_init()...\n",
+	       (unsigned int)hwtrap->is_parallel_nand);
 #endif
 	if (hwtrap->is_spi_nand_device_ecc ||
 		hwtrap->is_spi_nand_ctrl_ecc ||

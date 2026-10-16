@@ -100,6 +100,8 @@
 #include <flashhal.h>
 #include <asm/tc3162.h>
 #include <asm/system.h>
+/* HG5582A 诊断：prom_printf 即 printf，需要它的声明 */
+#include <common/debug.h>
 #endif //#if defined(TCSUPPORT_2_6_36_KERNEL) || defined(TCSUPPORT_3_18_21_KERNEL)
 
 #include <asm/io.h>
@@ -665,6 +667,12 @@ static SPI_NAND_FLASH_RTN_T spi_nand_protocol_chk_status(u8 mask, u8 value)
 		if(rtn_status != SPI_NAND_FLASH_RTN_NO_ERROR) {
 			_SPI_NAND_PRINTF("[Error] get status fail!\n");
 			return rtn_status;
+		}
+		/* HG5582A 诊断：每 10 万次报一次，方便判断是不是卡在等 OIP 清零 */
+		if ((check_cnt % 100000) == 99999) {
+			prom_printf("[HG5582A] chk_status spinning cnt=%u mask=0x%x val=0x%x status=0x%x\n",
+					 (unsigned int)check_cnt, (unsigned int)mask,
+					 (unsigned int)value, (unsigned int)status);
 		}
 		if(check_cnt == _SPI_NFI_CHECK_ECC_DONE_MAX_TIMES) {		
 			_SPI_NAND_PRINTF("[Error] wait for busy free timeout, status=0x%x!\n", status);
@@ -4955,6 +4963,9 @@ static int nand_probe_init(void)
 		nand_probe = spi_nand_probe;
 		arht_nand_reset = spi_nand_protocol_reset;
 	}
+	prom_printf("[HG5582A] nand_probe_init: _parallel_nand_mode=%u -> %s\n",
+			 (unsigned int)_parallel_nand_mode,
+			 (_parallel_nand_mode ? "parallel_nand_probe" : "spi_nand_probe"));
 	return 0;
 }
 
@@ -5128,7 +5139,10 @@ SPI_NAND_FLASH_RTN_T SPI_NAND_Flash_Init(u32 rom_base)
 #endif
 
 	memset(&spi_nfi_conf_t,0,sizeof(SPI_NFI_CONF_T));
+	prom_printf("[HG5582A] SPI_NAND_Flash_Init: enter, _parallel_nand_mode=%u\n",
+			 (unsigned int)_parallel_nand_mode);
 	ret = nand_probe_init();
+	prom_printf("[HG5582A] nand_probe_init() -> %d\n", ret);
 	if(ret) {
 		_SPI_NAND_PRINTF("nand_probe_init fail.\n");
 		return ret;
@@ -5142,7 +5156,9 @@ SPI_NAND_FLASH_RTN_T SPI_NAND_Flash_Init(u32 rom_base)
 #endif
 
 	/* 2. Enable Manual Mode */
+	prom_printf("[HG5582A] enabling manual mode...\n");
 	_SPI_NAND_ENABLE_MANUAL_MODE();	
+	prom_printf("[HG5582A] manual mode enabled, calling nand_probe()...\n");
 
  	/* 3. Probe flash information */
 	if ( nand_probe(&_current_flash_info_t) != SPI_NAND_FLASH_RTN_NO_ERROR ) {
