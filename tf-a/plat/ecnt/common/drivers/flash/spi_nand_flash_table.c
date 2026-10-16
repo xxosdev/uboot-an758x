@@ -626,6 +626,35 @@ const struct SPI_NAND_FLASH_INFO_T spi_nand_flash_tables[] = {
 		extend_dev_id:				_SPI_NAND_DEVICE_ID_W25N02GV_EXTEND,
 	},		
 
+	/* HG5582A: Winbond W29N02KVSIAF (2Gbit / 页 2048 / OOB 64 / 块 128KiB).
+	 * 几何取同容量条目，OOB 字段沿用原厂固件对该芯片的取值 (0x80)。
+	 * 原厂固件在本机串口打的就是 "Detected SPI NAND Flash : W29N02KVSIAF"。
+	 */
+	{
+		mfr_id:						_SPI_NAND_MANUFACTURER_ID_WINBOND,
+		dev_id:						_SPI_NAND_DEVICE_ID_W29N02KVSIAF,
+		ptr_name:					(const u8 *) " _SPI_NAND_DEVICE_ID_W29N02KVSIAF",
+		device_size:				_SPI_NAND_CHIP_SIZE_2GBIT,
+		page_size:					_SPI_NAND_PAGE_SIZE_2KBYTE,
+		oob_size:					_SPI_NAND_OOB_SIZE_128BYTE,
+		erase_size: 				_SPI_NAND_BLOCK_SIZE_128KBYTE,
+		dummy_mode: 				SPI_NAND_FLASH_READ_DUMMY_BYTE_APPEND,
+		read_mode:					SPI_NAND_FLASH_READ_SPEED_MODE_DUAL,
+		write_mode: 				SPI_NAND_FLASH_WRITE_SPEED_MODE_SINGLE,
+		oob_free_layout :			&ooblayout_type1,
+		feature:					0,
+		die_num:					1,
+		ecc_fail_check_info:		{0x30, 0x20},
+		write_en_type:				SPI_NAND_FLASH_WRITE_EN_FIRST,
+		unlock_block_info:			{0x7C, 0x0},
+		quad_en:					{0x0, 0x0},
+		ecc_en: 					{_SPI_NAND_ADDR_FEATURE, 0x10, 0x10},
+#ifdef TCSUPPORT_NAND_FLASH_OTP
+		otp_page_num:				12,
+#endif
+		extend_dev_id:				_SPI_NAND_DEVICE_ID_W29N02KVSIAF_EXTEND,
+	},
+
 	/* ===== MXIC ===== */
 	{
 		mfr_id:						_SPI_NAND_MANUFACTURER_ID_MXIC,

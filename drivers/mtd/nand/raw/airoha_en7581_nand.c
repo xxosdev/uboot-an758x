@@ -1550,8 +1550,12 @@ static int airoha_nfc_probe(struct udevice *dev)
 		       rd_mhz_x10 / 10, rd_mhz_x10 % 10, rlt);
 	}
 	if (nfi_read32(nfc, NFI_MODE) & NFI_MODE_SERIAL) {
-		dev_err(dev, "NFI is configured for serial NAND\n");
-		return -ENODEV;
+		/*
+		 * HG5582A: 该位是复位锁存值，在本板上并不代表总线真的接成串口，
+		 * 直接 -ENODEV 会让 NAND 完全不可用。改成告警后继续探测，
+		 * 由 nand_scan_ident() 用 READID 的实际结果来决定成败。
+		 */
+		dev_warn(dev, "NFI reports serial mode; continuing with parallel probe\n");
 	}
 
 	return airoha_nfc_init_chip(nfc);

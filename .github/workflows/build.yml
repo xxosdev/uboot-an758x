@@ -16,6 +16,7 @@ jobs:
       matrix:
         target:
           - hg5382a
+          - hg5582a
           - hg5585f-ct
           - hg5585f-cu
           - xg2010g

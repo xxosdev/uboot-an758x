@@ -48,6 +48,12 @@ hg5382a)
 	soc=EN7581
 	parallel_nand=1
 	;;
+hg5582a)
+	defconfig=an7581_fiberhome_hg5582a_defconfig
+	artifact_prefix=an7581-fiberhome-hg5582a
+	soc=EN7581
+	parallel_nand=0
+	;;
 hg5585f-ct)
 	defconfig=an7581_fiberhome_hg5585f-ct_defconfig
 	artifact_prefix=an7581-fiberhome-hg5585f-ct
