@@ -1554,8 +1554,13 @@ static int airoha_nfc_probe(struct udevice *dev)
 		 * HG5582A: 该位是复位锁存值，在本板上并不代表总线真的接成串口，
 		 * 直接 -ENODEV 会让 NAND 完全不可用。改成告警后继续探测，
 		 * 由 nand_scan_ident() 用 READID 的实际结果来决定成败。
+		 *
+		 * 注意：这里必须用 printf()。dev_warn() 在
+		 * CONFIG_LOGLEVEL <= LOGL_WARNING 的配置下会被 dev_printk_emit()
+		 * 在编译期整段优化掉，日志里一条都看不到。
 		 */
-		dev_warn(dev, "NFI reports serial mode; continuing with parallel probe\n");
+		printf("EN7581 NFI: mode=0x%08x reports serial; continuing with parallel probe\n",
+		       nfi_read32(nfc, NFI_MODE));
 	}
 
 	return airoha_nfc_init_chip(nfc);
