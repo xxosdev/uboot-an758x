@@ -654,8 +654,10 @@ const struct SPI_NAND_FLASH_INFO_T spi_nand_flash_tables[] = {
 #endif
 		extend_dev_id:				_SPI_NAND_DEVICE_ID_W29N02KVSIAF_EXTEND,
 		/* SoC(控制器) ECC：8bit -> NFI spare 28B/512B，与原厂固件
-		 * "Using SoC ECC. / ECC ability:8 / NFI spare area size:28" 一致 */
-		soc_ecc_ability:			SPI_ECC_ENCODE_ABILITY_8BITS,
+		 * "Using SoC ECC. / ECC ability:8 / NFI spare area size:28" 一致。
+		 * 这里必须写裸数字：本文件还要被宿主 cc 编译成 flash_table 生成器
+		 * （-DFLASH_TABLE_OPEN），那时看不到 SPI_ECC_ENCODE_ABILITY_* 枚举。 */
+		soc_ecc_ability:			8,
 	},
 
 	/* ===== MXIC ===== */
