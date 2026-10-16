@@ -390,6 +390,15 @@ $(eval $(call add_define,TCSUPPORT_CPU_ARMV8))
 $(eval $(call add_define,TCSUPPORT_UBOOT_64BIT))
 endif
 
+# HG5582A：本板 HWTRAP/SFC_STRAP 被译成 SPI NOR，会让 BL23 走 spi_nor_init()
+# 并挂死；该板实际是串口(SPI) NAND。这里把 make 变量变成 -D，供
+# ecnt_bl2_setup.c / flashhal.c / spi_controller.c 使用。
+# 注意：光在 build-an758x.sh 里传 TCSUPPORT_xxx=1 只是 make 变量，
+# 不会自动变成宏定义，必须像这样 add_define 一次。
+ifneq ($(strip $(TCSUPPORT_HG5582A_FORCE_NAND)),)
+$(eval $(call add_define,TCSUPPORT_HG5582A_FORCE_NAND))
+endif
+
 ifneq ($(strip $(TCSUPPORT_CPU_AN7583)),)
 $(eval $(call add_define,TCSUPPORT_CPU_AN7583))
 $(eval $(call add_define,TCSUPPORT_CPU_EN7523))
